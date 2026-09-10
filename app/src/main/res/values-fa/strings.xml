@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ALAS</string>
-    <string name="app_name_full">ALAS (زیرنویس زنده صوتی با هوش مصنوعی)</string>
+    <string name="app_name">SubLive</string>
+    <string name="app_name_full">SubLive (زیرنویس زنده)</string>
     <string name="system_status">وضعیت سیستم</string>
     <string name="status_connected">زیرنویس زنده فعال است</string>
     <string name="status_disconnected">آماده به کار (قطع)</string>
@@ -23,7 +23,7 @@
     <string name="show">نمایش</string>
     <string name="get_api_key">دریافت کلید API جمینای</string>
     <string name="api_key_guide">برای استفاده از برنامه، باید یک کلید API رایگان از Google AI Studio دریافت کنید.</string>
-    <string name="help_title">راهنمای استفاده از ALAS</string>
+    <string name="help_title">راهنمای استفاده از SubLive</string>
     <string name="help_content">۱. به تنظیمات بروید و کلید API خود را وارد کنید.\n۲. زبان مقصد زیرنویس را انتخاب کنید.\n۳. روی «شروع زیرنویس» کلیک کنید تا رونویسی و ترجمه همزمان آغاز شود.\n۴. از کادر شناور زیرنویس هنگام تماشای ویدیوها در یوتیوب یا برنامه‌های دیگر لذت ببرید.</string>
     <string name="close">بستن</string>
 </resources>

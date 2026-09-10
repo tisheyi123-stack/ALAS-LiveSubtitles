@@ -104,18 +104,16 @@ class AudioDubbingForegroundService : Service() {
             }
             
             webSocketManager?.onTextMessageReceived = { chunk ->
-                val current = liveSubtitleText.value
-                val updated = if (current.length > 250) {
-                    current.takeLast(150) + chunk
-                } else {
-                    current + chunk
-                }
-                liveSubtitleText.value = updated
+                // Rolling subtitle window: only the latest ~2 lines stay on screen,
+                // older text scrolls away instead of piling up.
+                val combined = (liveSubtitleText.value + chunk).takeLast(160)
+                val trimmed = combined.substringAfter(' ', combined).trimStart()
+                liveSubtitleText.value = trimmed.ifEmpty { combined }
 
-                // Auto clear subtitles after 8 seconds of silence/inactivity
+                // Auto clear subtitles after 5 seconds of silence/inactivity
                 clearTextJob?.cancel()
                 clearTextJob = serviceScope.launch {
-                    kotlinx.coroutines.delay(8000)
+                    kotlinx.coroutines.delay(5000)
                     liveSubtitleText.value = ""
                 }
             }
@@ -220,7 +218,7 @@ class AudioDubbingForegroundService : Service() {
         )
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("ALAS Live Subtitles")
+            .setContentTitle("SubLive")
             .setContentText("Capturing and displaying real-time subtitles...")
             .setSmallIcon(android.R.drawable.ic_btn_speak_now)
             .setPriority(NotificationCompat.PRIORITY_LOW)

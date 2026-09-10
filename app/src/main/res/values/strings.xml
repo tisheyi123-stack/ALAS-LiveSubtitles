@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">ALAS</string>
-    <string name="app_name_full">ALAS (Live Audio Subtitles Mobile)</string>
+    <string name="app_name">SubLive</string>
+    <string name="app_name_full">SubLive (Live Subtitles)</string>
     <string name="system_status">System Status</string>
     <string name="status_connected">Live Subtitles Active</string>
     <string name="status_disconnected">Ready / Disconnected</string>
@@ -23,7 +23,7 @@
     <string name="show">Show</string>
     <string name="get_api_key">Get Gemini API Key</string>
     <string name="api_key_guide">To use this app, you need a free Gemini API Key from Google AI Studio.</string>
-    <string name="help_title">How to use ALAS</string>
+    <string name="help_title">How to use SubLive</string>
     <string name="help_content">1. Go to settings and set your Gemini API Key.\n2. Choose your target language.\n3. Tap \'Start Subtitles\' to begin real-time translation.\n4. Use the floating subtitle box while watching videos in other apps.</string>
     <string name="close">Close</string>
 </resources>
