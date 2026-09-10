@@ -1,4 +1,4 @@
-package com.alad.app.presentation.settings
+package com.sublive.app.presentation.settings
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -32,8 +32,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.alad.app.R
-import com.alad.app.ui.theme.*
+import com.sublive.app.R
+import com.sublive.app.ui.theme.*
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)

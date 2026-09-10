@@ -1,4 +1,4 @@
-package com.alad.app
+package com.sublive.app
 
 import android.Manifest
 import android.app.Activity
@@ -19,14 +19,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.alad.app.core.service.AudioDubbingForegroundService
-import com.alad.app.data.repository.UserPreferencesRepository
-import com.alad.app.presentation.main.MainScreen
-import com.alad.app.presentation.main.MainViewModel
-import com.alad.app.presentation.main.MainViewModelFactory
-import com.alad.app.presentation.settings.SettingsScreen
-import com.alad.app.presentation.settings.SettingsViewModel
-import com.alad.app.presentation.settings.SettingsViewModelFactory
+import com.sublive.app.core.service.AudioDubbingForegroundService
+import com.sublive.app.data.repository.UserPreferencesRepository
+import com.sublive.app.presentation.main.MainScreen
+import com.sublive.app.presentation.main.MainViewModel
+import com.sublive.app.presentation.main.MainViewModelFactory
+import com.sublive.app.presentation.settings.SettingsScreen
+import com.sublive.app.presentation.settings.SettingsViewModel
+import com.sublive.app.presentation.settings.SettingsViewModelFactory
 
 class MainActivity : ComponentActivity() {
 
@@ -62,7 +62,7 @@ class MainActivity : ComponentActivity() {
         val repository = UserPreferencesRepository(applicationContext)
         
         setContent {
-            com.alad.app.ui.theme.ALADTheme {
+            com.sublive.app.ui.theme.SubLiveTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background

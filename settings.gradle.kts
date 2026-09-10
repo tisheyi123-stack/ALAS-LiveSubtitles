@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ALAD Mobile"
+rootProject.name = "SubLive"
 include(":app")

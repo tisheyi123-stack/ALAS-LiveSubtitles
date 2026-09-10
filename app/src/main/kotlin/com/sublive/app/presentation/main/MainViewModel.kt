@@ -1,10 +1,10 @@
-package com.alad.app.presentation.main
+package com.sublive.app.presentation.main
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.alad.app.data.repository.UserPreferencesRepository
-import com.alad.app.core.service.AudioDubbingForegroundService
+import com.sublive.app.data.repository.UserPreferencesRepository
+import com.sublive.app.core.service.AudioDubbingForegroundService
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow

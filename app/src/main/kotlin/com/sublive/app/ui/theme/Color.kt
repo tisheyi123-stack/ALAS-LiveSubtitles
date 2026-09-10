@@ -1,4 +1,4 @@
-package com.alad.app.ui.theme
+package com.sublive.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 

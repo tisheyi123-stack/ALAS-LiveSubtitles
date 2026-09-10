@@ -1,4 +1,4 @@
-package com.alad.app.core.service
+package com.sublive.app.core.service
 
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner

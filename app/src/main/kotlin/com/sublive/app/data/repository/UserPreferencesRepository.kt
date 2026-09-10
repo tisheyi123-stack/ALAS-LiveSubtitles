@@ -1,4 +1,4 @@
-package com.alad.app.data.repository
+package com.sublive.app.data.repository
 
 import android.content.Context
 import androidx.datastore.core.DataStore
@@ -7,7 +7,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "alad_settings")
+val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "sublive_settings")
 
 class UserPreferencesRepository(private val context: Context) {
 

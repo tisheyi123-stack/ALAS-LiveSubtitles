@@ -1,4 +1,4 @@
-package com.alad.app.core.service
+package com.sublive.app.core.service
 
 import android.content.Context
 import android.os.Bundle

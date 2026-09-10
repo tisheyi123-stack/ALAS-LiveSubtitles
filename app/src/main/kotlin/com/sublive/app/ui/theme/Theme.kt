@@ -1,4 +1,4 @@
-package com.alad.app.ui.theme
+package com.sublive.app.ui.theme
 
 import android.app.Activity
 import androidx.compose.material3.MaterialTheme
@@ -25,7 +25,7 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 @Composable
-fun ALADTheme(
+fun SubLiveTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = DarkColorScheme

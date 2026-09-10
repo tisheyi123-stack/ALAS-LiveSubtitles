@@ -1,4 +1,4 @@
-package com.alad.app.core.service
+package com.sublive.app.core.service
 
 import android.content.Context
 import android.content.Intent
@@ -41,7 +41,7 @@ import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
-import com.alad.app.ui.theme.*
+import com.sublive.app.ui.theme.*
 
 class OverlayWidgetService : LifecycleService() {
 
@@ -86,7 +86,7 @@ class OverlayWidgetService : LifecycleService() {
         composeView = ComposeView(this).apply {
             setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
-                ALADTheme {
+                SubLiveTheme {
                     SubtitleOverlayContent(
                         onDrag = { dx, dy ->
                             params?.x = (params?.x ?: 0) + dx.toInt()
@@ -101,7 +101,7 @@ class OverlayWidgetService : LifecycleService() {
                                 }
                                 startService(intent)
                             } else {
-                                val intent = Intent(this@OverlayWidgetService, com.alad.app.TransparentCaptureActivity::class.java)
+                                val intent = Intent(this@OverlayWidgetService, com.sublive.app.TransparentCaptureActivity::class.java)
                                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                 startActivity(intent)
                             }
@@ -146,32 +146,12 @@ fun SubtitleOverlayContent(
                     onDrag(dragAmount.x, dragAmount.y)
                 }
             }
-            .clip(RoundedCornerShape(20.dp))
-            .background(
-                Brush.verticalGradient(
-                    listOf(
-                        Color(0xEE0A0E17),
-                        Color(0xF5101726)
-                    )
-                )
-            )
-            .border(
-                BorderStroke(
-                    1.2.dp,
-                    Brush.horizontalGradient(
-                        listOf(
-                            NeonCyan.copy(alpha = 0.5f),
-                            Color.White.copy(alpha = 0.15f),
-                            NeonPurple.copy(alpha = 0.4f)
-                        )
-                    )
-                ),
-                shape = RoundedCornerShape(20.dp)
-            )
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color(0xCC000000))
+            .padding(horizontal = 12.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Drag handle and top controls
+        // Compact top bar: drag handle + buttons on same row
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
@@ -180,8 +160,8 @@ fun SubtitleOverlayContent(
             // Drag bar indicator
             Box(
                 modifier = Modifier
-                    .width(36.dp)
-                    .height(4.dp)
+                    .width(28.dp)
+                    .height(3.dp)
                     .clip(CircleShape)
                     .background(Color.White.copy(alpha = 0.35f))
             )
@@ -194,7 +174,7 @@ fun SubtitleOverlayContent(
                         onToggle(isRunning)
                     },
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(22.dp)
                         .clip(CircleShape)
                         .background(if (isRunning) NeonRose.copy(alpha = 0.25f) else NeonCyan.copy(alpha = 0.25f))
                 ) {
@@ -202,11 +182,11 @@ fun SubtitleOverlayContent(
                         imageVector = if (isRunning) Icons.Default.Stop else Icons.Default.PlayArrow,
                         contentDescription = "Toggle",
                         tint = if (isRunning) NeonRose else NeonCyan,
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(13.dp)
                     )
                 }
 
-                Spacer(modifier = Modifier.width(6.dp))
+                Spacer(modifier = Modifier.width(4.dp))
 
                 // Close Button
                 IconButton(
@@ -215,7 +195,7 @@ fun SubtitleOverlayContent(
                         onClose()
                     },
                     modifier = Modifier
-                        .size(28.dp)
+                        .size(22.dp)
                         .clip(CircleShape)
                         .background(Color.White.copy(alpha = 0.1f))
                 ) {
@@ -223,38 +203,30 @@ fun SubtitleOverlayContent(
                         imageVector = Icons.Default.Close,
                         contentDescription = "Close",
                         tint = Color.White.copy(alpha = 0.8f),
-                        modifier = Modifier.size(16.dp)
+                        modifier = Modifier.size(13.dp)
                     )
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(6.dp))
+        // Subtitle Text — single line, no extra spacing
+        val displayText = when {
+            subtitleText.isNotEmpty() -> subtitleText
+            isRunning -> "در حال دریافت..."
+            else -> "آماده"
+        }
 
-        // Subtitle Text Box
-        Box(
+        Text(
+            text = displayText,
+            color = if (subtitleText.isNotEmpty()) Color(0xFFFFF275) else TextSecondary,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(vertical = 4.dp),
-            contentAlignment = Alignment.Center
-        ) {
-            val displayText = when {
-                subtitleText.isNotEmpty() -> subtitleText
-                isRunning -> "در حال دریافت و ترجمه زنده..."
-                else -> "زیرنویس آماده است — روی دکمه شروع بزنید"
-            }
-
-            Text(
-                text = displayText,
-                color = if (subtitleText.isNotEmpty()) Color(0xFFFFF275) else TextSecondary, // Warm subtitle yellow or muted gray
-                fontSize = 17.sp,
-                fontWeight = FontWeight.Bold,
-                textAlign = TextAlign.Center,
-                lineHeight = 24.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
+                .padding(top = 2.dp, bottom = 2.dp)
+        )
     }
 }

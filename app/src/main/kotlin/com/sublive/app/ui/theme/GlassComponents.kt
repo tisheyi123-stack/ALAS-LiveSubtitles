@@ -1,4 +1,4 @@
-package com.alad.app.ui.theme
+package com.sublive.app.ui.theme
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
@@ -24,7 +24,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
-import com.alad.app.R
+import com.sublive.app.R
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp

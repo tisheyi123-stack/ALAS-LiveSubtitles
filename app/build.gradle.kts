@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.alad.app"
+    namespace = "com.sublive.app"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.alad.app"
+        applicationId = "com.sublive.app"
         minSdk = 29
         targetSdk = 34
         versionCode = 3

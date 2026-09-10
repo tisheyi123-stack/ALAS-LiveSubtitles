@@ -1,4 +1,4 @@
-package com.alad.app.core.network
+package com.sublive.app.core.network
 
 import android.util.Base64
 import android.util.Log
@@ -7,15 +7,15 @@ import okio.ByteString
 import org.json.JSONArray
 import org.json.JSONObject
 
-class ALADWebSocketManager(private val client: OkHttpClient) {
+class SubLiveWebSocketManager(private val client: OkHttpClient) {
     private var webSocket: WebSocket? = null
     var onTextMessageReceived: ((String) -> Unit)? = null
     var onStatusChanged: ((String) -> Unit)? = null
 
     companion object {
-        private const val TAG = "ALADWebSocketManager"
+        private const val TAG = "SubLiveWebSocketManager"
         private const val GEMINI_WS_URL = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent"
-        // Same translation model as the original working ALAD app.
+        // Same translation model as the original working app.
         // Translation models only accept AUDIO modality, so we keep AUDIO
         // and read the live subtitle text from outputAudioTranscription.
         private const val MODEL = "models/gemini-3.5-live-translate-preview"

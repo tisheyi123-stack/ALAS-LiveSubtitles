@@ -1,4 +1,4 @@
-package com.alad.app.core.service
+package com.sublive.app.core.service
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -12,9 +12,9 @@ import android.media.projection.MediaProjectionManager
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.alad.app.core.audio.AudioCaptureManager
-import com.alad.app.core.network.ALADWebSocketManager
-import com.alad.app.data.repository.UserPreferencesRepository
+import com.sublive.app.core.audio.AudioCaptureManager
+import com.sublive.app.core.network.SubLiveWebSocketManager
+import com.sublive.app.data.repository.UserPreferencesRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -45,7 +45,7 @@ class AudioDubbingForegroundService : Service() {
     
     private var mediaProjection: MediaProjection? = null
     private var audioCaptureManager: AudioCaptureManager? = null
-    private var webSocketManager: ALADWebSocketManager? = null
+    private var webSocketManager: SubLiveWebSocketManager? = null
     private var langObservationJob: Job? = null
     private var clearTextJob: Job? = null
     // Single-line subtitle: only the currently spoken sentence stays on
@@ -99,7 +99,7 @@ class AudioDubbingForegroundService : Service() {
             val apiKey = repository.apiKeyFlow.first()
             val targetLang = repository.targetLangFlow.first()
             
-            webSocketManager = ALADWebSocketManager(OkHttpClient())
+            webSocketManager = SubLiveWebSocketManager(OkHttpClient())
             
             webSocketManager?.onStatusChanged = { status ->
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
@@ -208,7 +208,7 @@ class AudioDubbingForegroundService : Service() {
     }
 
     private fun createNotification(): Notification {
-        val intent = Intent(this, com.alad.app.MainActivity::class.java).apply {
+        val intent = Intent(this, com.sublive.app.MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
         }
         val pendingIntent = android.app.PendingIntent.getActivity(

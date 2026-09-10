@@ -1,4 +1,4 @@
-package com.alad.app.presentation.main
+package com.sublive.app.presentation.main
 
 import android.content.Intent
 import android.net.Uri
@@ -41,8 +41,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.alad.app.R
-import com.alad.app.ui.theme.*
+import com.sublive.app.R
+import com.sublive.app.ui.theme.*
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.sin
@@ -168,7 +168,7 @@ fun MainScreen(
                         ) {
                             Image(
                                 painter = painterResource(id = R.mipmap.ic_launcher),
-                                contentDescription = "ALAD Logo",
+                                contentDescription = "SubLive Logo",
                                 modifier = Modifier.fillMaxSize()
                             )
                         }
@@ -177,7 +177,7 @@ fun MainScreen(
 
                         Column {
                             Text(
-                                text = "ALAD",
+                                text = "SubLive",
                                 fontWeight = FontWeight.ExtraBold,
                                 color = Color.White,
                                 fontSize = 20.sp,
@@ -349,7 +349,7 @@ fun MainScreen(
                 }
 
                 // Floating Widget Toggle Card
-                val isWidgetActive by com.alad.app.core.service.OverlayWidgetService.isWidgetActive.collectAsState()
+                val isWidgetActive by com.sublive.app.core.service.OverlayWidgetService.isWidgetActive.collectAsState()
                 GlassCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(22.dp),
@@ -361,7 +361,7 @@ fun MainScreen(
                             )
                             context.startActivity(intent)
                         } else {
-                            val intent = Intent(context, com.alad.app.core.service.OverlayWidgetService::class.java)
+                            val intent = Intent(context, com.sublive.app.core.service.OverlayWidgetService::class.java)
                             if (isWidgetActive) {
                                 context.stopService(intent)
                             } else {
@@ -430,7 +430,7 @@ fun AnimatedWaveform(
     isConnected: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val amplitude by com.alad.app.core.service.AudioDubbingForegroundService.audioAmplitude.collectAsState()
+    val amplitude by com.sublive.app.core.service.AudioDubbingForegroundService.audioAmplitude.collectAsState()
     val animatedAmplitude by animateFloatAsState(
         targetValue = if (isConnected) amplitude else 0f,
         animationSpec = tween(50, easing = LinearEasing),

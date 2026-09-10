@@ -1,9 +1,9 @@
-package com.alad.app.presentation.settings
+package com.sublive.app.presentation.settings
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.alad.app.data.repository.UserPreferencesRepository
+import com.sublive.app.data.repository.UserPreferencesRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

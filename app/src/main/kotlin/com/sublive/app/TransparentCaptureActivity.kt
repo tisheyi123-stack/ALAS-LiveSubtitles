@@ -1,4 +1,4 @@
-package com.alad.app
+package com.sublive.app
 
 import android.app.Activity
 import android.content.Context
@@ -9,7 +9,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import com.alad.app.core.service.AudioDubbingForegroundService
+import com.sublive.app.core.service.AudioDubbingForegroundService
 
 class TransparentCaptureActivity : ComponentActivity() {
 
