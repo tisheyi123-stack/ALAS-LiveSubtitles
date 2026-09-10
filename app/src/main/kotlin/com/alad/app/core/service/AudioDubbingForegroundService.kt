@@ -39,6 +39,7 @@ class AudioDubbingForegroundService : Service() {
         val isRunning = MutableStateFlow(false)
         val audioAmplitude = MutableStateFlow(0f)
         val liveSubtitleText = MutableStateFlow("")
+        const val MAX_VISIBLE_SENTENCES = 4
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.IO + Job())
@@ -48,6 +49,10 @@ class AudioDubbingForegroundService : Service() {
     private var webSocketManager: ALADWebSocketManager? = null
     private var langObservationJob: Job? = null
     private var clearTextJob: Job? = null
+    // Sentence queue for rolling subtitles: max N recent sentences stay on
+    // screen, older spoken lines are dropped instead of piling up.
+    private val recentSentences = ArrayDeque<String>()
+    private val partialSentence = StringBuilder()
 
     override fun onCreate() {
         super.onCreate()
@@ -86,6 +91,8 @@ class AudioDubbingForegroundService : Service() {
     private fun startSubtitling(resultCode: Int, data: Intent) {
         isRunning.value = true
         liveSubtitleText.value = ""
+        recentSentences.clear()
+        partialSentence.clear()
         val projectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         mediaProjection = projectionManager.getMediaProjection(resultCode, data)
         
@@ -104,16 +111,39 @@ class AudioDubbingForegroundService : Service() {
             }
             
             webSocketManager?.onTextMessageReceived = { chunk ->
-                // Rolling subtitle window: only the latest ~2 lines stay on screen,
-                // older text scrolls away instead of piling up.
-                val combined = (liveSubtitleText.value + chunk).takeLast(160)
-                val trimmed = combined.substringAfter(' ', combined).trimStart()
-                liveSubtitleText.value = trimmed.ifEmpty { combined }
+                // Sentence-based rolling window: split the stream into sentences
+                // (works for . ! ? and Persian ؟). Keep only the latest
+                // MAX_VISIBLE_SENTENCES on screen, drop spoken (old) lines.
+                partialSentence.append(chunk)
+                val text = partialSentence.toString()
+                // Split keeping the delimiter attached to each sentence.
+                val parts = text.split(Regex("(?<=[.!?؟])\\s+"))
+                if (parts.size > 1) {
+                    for (i in 0 until parts.size - 1) {
+                        val s = parts[i].trim()
+                        if (s.isNotEmpty()) {
+                            recentSentences.addLast(s)
+                            while (recentSentences.size > MAX_VISIBLE_SENTENCES) {
+                                recentSentences.removeFirst()
+                            }
+                        }
+                    }
+                    partialSentence.clear()
+                    partialSentence.append(parts.last())
+                }
+                // Show completed sentences + the in-progress one being spoken now.
+                val view = buildString {
+                    recentSentences.forEach { append(it).append(' ') }
+                    append(partialSentence.toString().trim())
+                }.trim()
+                liveSubtitleText.value = view
 
                 // Auto clear subtitles after 5 seconds of silence/inactivity
                 clearTextJob?.cancel()
                 clearTextJob = serviceScope.launch {
                     kotlinx.coroutines.delay(5000)
+                    recentSentences.clear()
+                    partialSentence.clear()
                     liveSubtitleText.value = ""
                 }
             }
