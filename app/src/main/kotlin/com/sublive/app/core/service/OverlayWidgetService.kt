@@ -212,7 +212,7 @@ fun SubtitleOverlayContent(
         // Subtitle Text — single line, no extra spacing
         val displayText = when {
             subtitleText.isNotEmpty() -> subtitleText
-            isRunning -> "در حال دریافت..."
+            isRunning -> "..."
             else -> "آماده"
         }
 
