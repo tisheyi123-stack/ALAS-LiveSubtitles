@@ -17,7 +17,8 @@ class AudioCaptureManager {
         const val SAMPLE_RATE = 16000
         const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
         const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_16BIT
-        val BUFFER_SIZE = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT)
+        val BATCH_BYTES = SAMPLE_RATE * 2 / 20 // 50ms chunks
+        val BUFFER_SIZE = AudioRecord.getMinBufferSize(SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT).coerceAtLeast(BATCH_BYTES * 2)
     }
 
     @SuppressLint("MissingPermission")
@@ -52,7 +53,7 @@ class AudioCaptureManager {
             isRecording = true
             
             Thread {
-                val buffer = ByteArray(BUFFER_SIZE)
+                val buffer = ByteArray(BATCH_BYTES)
                 var chunksRead = 0
                 while (isRecording) {
                     val read = audioRecord?.read(buffer, 0, buffer.size) ?: 0
