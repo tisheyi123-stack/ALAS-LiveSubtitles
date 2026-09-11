@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 import kotlin.math.sqrt
 
 class AudioDubbingForegroundService : Service() {
@@ -35,6 +36,10 @@ class AudioDubbingForegroundService : Service() {
         const val EXTRA_RESULT_CODE = "EXTRA_RESULT_CODE"
         const val EXTRA_RESULT_DATA = "EXTRA_RESULT_DATA"
         private const val TAG = "SubtitleService"
+
+        // Max-turn guard: force-close a turn so translation never stalls
+        // seconds behind the audio during a long monologue.
+        private const val MAX_TURN_MS = 6000L
         
         val isRunning = MutableStateFlow(false)
         val audioAmplitude = MutableStateFlow(0f)
@@ -48,6 +53,8 @@ class AudioDubbingForegroundService : Service() {
     private var webSocketManager: SubLiveWebSocketManager? = null
     private var langObservationJob: Job? = null
     private var clearTextJob: Job? = null
+    private var maxTurnJob: Job? = null
+    private var turnStartMs = 0L
     // Single-line subtitle: only the currently spoken sentence stays on
     // screen, everything already said is dropped immediately.
     private val partialSentence = StringBuilder()
@@ -86,6 +93,43 @@ class AudioDubbingForegroundService : Service() {
         return START_NOT_STICKY
     }
 
+    private fun buildClient(): OkHttpClient = OkHttpClient.Builder()
+        .pingInterval(15, TimeUnit.SECONDS)
+        .connectTimeout(15, TimeUnit.SECONDS)
+        .readTimeout(0, TimeUnit.SECONDS) // long-lived WS: no read timeout
+        .retryOnConnectionFailure(true)
+        .build()
+
+    /** Force-close the current turn + reset the guard. Safe to call often. */
+    private fun commitTurn() {
+        turnStartMs = 0L
+        cancelMaxTurnGuard()
+        try {
+            webSocketManager?.commitTurn()
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun armMaxTurnGuard() {
+        maxTurnJob?.cancel()
+        maxTurnJob = serviceScope.launch {
+            kotlinx.coroutines.delay(MAX_TURN_MS)
+            // Long monologue: force the server to answer with what it has.
+            turnStartMs = System.currentTimeMillis()
+            try {
+                webSocketManager?.commitTurn()
+            } catch (_: Exception) {
+            }
+            armMaxTurnGuard()
+        }
+    }
+
+    private fun cancelMaxTurnGuard() {
+        maxTurnJob?.cancel()
+        maxTurnJob = null
+        turnStartMs = 0L
+    }
+
     private fun startSubtitling(resultCode: Int, data: Intent) {
         isRunning.value = true
         liveSubtitleText.value = ""
@@ -99,7 +143,7 @@ class AudioDubbingForegroundService : Service() {
             val apiKey = repository.apiKeyFlow.first()
             val targetLang = repository.targetLangFlow.first()
             
-            webSocketManager = SubLiveWebSocketManager(OkHttpClient())
+            webSocketManager = SubLiveWebSocketManager(buildClient())
             
             webSocketManager?.onStatusChanged = { status ->
                 android.os.Handler(android.os.Looper.getMainLooper()).post {
@@ -122,6 +166,11 @@ class AudioDubbingForegroundService : Service() {
                     liveSubtitleText.value = ""
                 }
             }
+
+            // Server closed the turn -> reset the max-turn guard.
+            webSocketManager?.onTurnComplete = {
+                cancelMaxTurnGuard()
+            }
             
             webSocketManager?.connect(apiKey, "", targetLang)
             
@@ -143,28 +192,42 @@ class AudioDubbingForegroundService : Service() {
             val appUid = applicationInfo.uid
             
             mediaProjection?.let { projection ->
-                audioCaptureManager?.startCapture(projection, appUid) { pcmData ->
-                    webSocketManager?.sendAudioData(pcmData)
-                    
-                    var sum = 0.0
-                    for (i in pcmData.indices step 2) {
-                        if (i + 1 < pcmData.size) {
-                            val sample = (pcmData[i].toInt() and 0xFF) or (pcmData[i+1].toInt() shl 8)
-                            val signedSample = sample.toShort().toFloat()
-                            sum += signedSample * signedSample
+                audioCaptureManager?.startCapture(
+                    projection,
+                    appUid,
+                    onAudioData = { pcmData ->
+                        webSocketManager?.sendAudioData(pcmData)
+                        // First audio of a turn -> arm the max-turn guard.
+                        if (turnStartMs == 0L) {
+                            turnStartMs = System.currentTimeMillis()
+                            armMaxTurnGuard()
                         }
+
+                        var sum = 0.0
+                        for (i in pcmData.indices step 2) {
+                            if (i + 1 < pcmData.size) {
+                                val sample = (pcmData[i].toInt() and 0xFF) or (pcmData[i+1].toInt() shl 8)
+                                val signedSample = sample.toShort().toFloat()
+                                sum += signedSample * signedSample
+                            }
+                        }
+                        val rms = if (pcmData.isNotEmpty()) sqrt(sum / (pcmData.size / 2)).toFloat() else 0f
+                        val normalized = (rms / 32767f * 3f).coerceIn(0f, 1f)
+                        val current = audioAmplitude.value
+                        audioAmplitude.value = current * 0.5f + normalized * 0.5f
+                    },
+                    onPauseDetected = {
+                        // ~600ms silence -> force the answer NOW instead of lagging.
+                        commitTurn()
                     }
-                    val rms = if (pcmData.isNotEmpty()) sqrt(sum / (pcmData.size / 2)).toFloat() else 0f
-                    val normalized = (rms / 32767f * 3f).coerceIn(0f, 1f)
-                    val current = audioAmplitude.value
-                    audioAmplitude.value = current * 0.5f + normalized * 0.5f
-                }
+                )
             }
         }
     }
 
     private fun stopSubtitling() {
         isRunning.value = false
+        cancelMaxTurnGuard()
         audioCaptureManager?.stopCapture()
         audioCaptureManager = null
         
