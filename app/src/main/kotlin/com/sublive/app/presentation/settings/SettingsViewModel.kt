@@ -13,6 +13,9 @@ import kotlinx.coroutines.launch
 class SettingsViewModel(private val repository: UserPreferencesRepository) : ViewModel() {
     private val _apiKey = MutableStateFlow("")
     val apiKey: StateFlow<String> = _apiKey.asStateFlow()
+
+    private val _groqKey = MutableStateFlow("")
+    val groqKey: StateFlow<String> = _groqKey.asStateFlow()
     
     private val _volumeRatio = MutableStateFlow(1.0f)
     val volumeRatio: StateFlow<Float> = _volumeRatio.asStateFlow()
@@ -20,16 +23,19 @@ class SettingsViewModel(private val repository: UserPreferencesRepository) : Vie
     init {
         viewModelScope.launch {
             _apiKey.value = repository.apiKeyFlow.first()
+            _groqKey.value = repository.groqKeyFlow.first()
             _volumeRatio.value = repository.volumeRatioFlow.first()
         }
     }
 
     fun updateApiKey(key: String) { _apiKey.value = key }
+    fun updateGroqKey(key: String) { _groqKey.value = key }
     fun updateVolumeRatio(ratio: Float) { _volumeRatio.value = ratio }
 
     fun saveSettings() {
         viewModelScope.launch {
             repository.updateApiKey(_apiKey.value)
+            repository.updateGroqKey(_groqKey.value)
             repository.updateVolumeRatio(_volumeRatio.value)
         }
     }

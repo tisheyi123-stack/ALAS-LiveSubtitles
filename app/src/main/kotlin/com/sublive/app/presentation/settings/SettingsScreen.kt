@@ -4,6 +4,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
@@ -42,10 +44,12 @@ fun SettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit = {}) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
     val apiKey by viewModel.apiKey.collectAsState()
+    val groqKey by viewModel.groqKey.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     var apiKeyVisible by remember { mutableStateOf(false) }
+    var groqKeyVisible by remember { mutableStateOf(false) }
 
     AmbientBackground {
         Scaffold(
@@ -81,6 +85,7 @@ fun SettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit = {}) {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
                     .padding(paddingValues)
                     .padding(horizontal = 20.dp, vertical = 12.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
@@ -222,7 +227,145 @@ fun SettingsScreen(viewModel: SettingsViewModel, onBack: () -> Unit = {}) {
                     }
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(4.dp))
+
+                // Groq API Key (Whisper fast speech-to-text) card
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    borderColor = NeonPurple,
+                    borderAlpha = 0.25f
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(40.dp)
+                                    .clip(CircleShape)
+                                    .background(NeonPurple.copy(alpha = 0.15f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Key,
+                                    contentDescription = null,
+                                    tint = NeonPurple,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.width(12.dp))
+
+                            Column {
+                                Text(
+                                    text = stringResource(R.string.groq_api_key),
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                    fontSize = 16.sp
+                                )
+                                Text(
+                                    text = "console.groq.com — Whisper STT",
+                                    color = TextSecondary,
+                                    fontSize = 12.sp
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        OutlinedTextField(
+                            value = groqKey,
+                            onValueChange = viewModel::updateGroqKey,
+                            placeholder = { Text("gsk_...", color = TextSecondary.copy(alpha = 0.6f)) },
+                            visualTransformation = if (groqKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedContainerColor = Color(0x25FFFFFF),
+                                unfocusedContainerColor = Color(0x12FFFFFF),
+                                focusedBorderColor = NeonPurple,
+                                unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
+                                focusedTextColor = Color.White,
+                                unfocusedTextColor = Color.White
+                            ),
+                            trailingIcon = {
+                                IconButton(onClick = { groqKeyVisible = !groqKeyVisible }) {
+                                    Icon(
+                                        imageVector = if (groqKeyVisible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                        contentDescription = if (groqKeyVisible) stringResource(R.string.hide) else stringResource(R.string.show),
+                                        tint = if (groqKeyVisible) NeonPurple else TextSecondary
+                                    )
+                                }
+                            }
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Text(
+                            text = stringResource(R.string.groq_key_guide),
+                            color = TextSecondary,
+                            fontSize = 13.sp,
+                            lineHeight = 20.sp
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(
+                                    Brush.horizontalGradient(
+                                        listOf(
+                                            NeonPurple.copy(alpha = 0.15f),
+                                            NeonCyan.copy(alpha = 0.15f)
+                                        )
+                                    )
+                                )
+                                .border(
+                                    BorderStroke(
+                                        1.dp,
+                                        Brush.horizontalGradient(
+                                            listOf(
+                                                NeonPurple.copy(alpha = 0.4f),
+                                                NeonCyan.copy(alpha = 0.4f)
+                                            )
+                                        )
+                                    ),
+                                    shape = RoundedCornerShape(14.dp)
+                                )
+                                .clickable {
+                                    uriHandler.openUri("https://console.groq.com/keys")
+                                }
+                                .padding(horizontal = 16.dp, vertical = 12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.get_groq_key),
+                                    color = NeonPurple,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 14.sp
+                                )
+
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.OpenInNew,
+                                    contentDescription = null,
+                                    tint = NeonPurple,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 // Save Settings Button
                 val interactionSource = remember { MutableInteractionSource() }

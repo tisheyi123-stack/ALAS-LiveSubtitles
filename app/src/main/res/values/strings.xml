@@ -22,6 +22,9 @@
     <string name="hide">Hide</string>
     <string name="show">Show</string>
     <string name="get_api_key">Get Gemini API Key</string>
+    <string name="groq_api_key">Groq API Key (Whisper)</string>
+    <string name="get_groq_key">Get Groq API Key</string>
+    <string name="groq_key_guide">Free key from console.groq.com for fast speech-to-text. Paste it here.</string>
     <string name="api_key_guide">To use this app, you need a free Gemini API Key from Google AI Studio.</string>
     <string name="help_title">How to use SubLive</string>
     <string name="help_content">1. Go to settings and set your Gemini API Key.\n2. Choose your target language.\n3. Tap \'Start Subtitles\' to begin real-time translation.\n4. Use the floating subtitle box while watching videos in other apps.</string>
