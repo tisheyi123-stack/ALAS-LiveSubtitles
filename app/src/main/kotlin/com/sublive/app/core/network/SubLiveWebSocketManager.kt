@@ -32,7 +32,7 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.d(TAG, "Connected to Gemini Live API")
                 onStatusChanged?.invoke("Connected")
-                sendGeminiSetup(sourceLang, targetLang)
+                sendGeminiSetup(targetLang)
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
@@ -89,9 +89,8 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
         })
     }
 
-    private fun sendGeminiSetup(sourceLang: String, targetLang: String) {
+    private fun sendGeminiSetup(targetLang: String) {
         val targetLangCode = targetLang.split("-")[0]
-        val sourceLangCode = sourceLang.split("-")[0]
         val setupPayload = JSONObject().apply {
             put("setup", JSONObject().apply {
                 put("model", MODEL)
@@ -99,12 +98,11 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
                     put("responseModalities", JSONArray().put("AUDIO"))
                     put("translationConfig", JSONObject().apply {
                         put("targetLanguageCode", targetLangCode)
-                        if (sourceLangCode.isNotEmpty() && sourceLangCode != "auto") {
-                            put("sourceLanguageCode", sourceLangCode)
-                        }
                         put("echoTargetLanguage", true)
                     })
                 })
+                // Ask the server to also send a text transcript of its spoken
+                // translation — this transcript IS our live subtitle stream.
                 put("outputAudioTranscription", JSONObject())
                 put("sessionResumption", JSONObject().apply {
                     put("handle", JSONObject.NULL)
