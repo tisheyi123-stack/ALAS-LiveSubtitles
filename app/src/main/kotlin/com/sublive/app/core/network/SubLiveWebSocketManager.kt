@@ -119,13 +119,12 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
     }
 
     private fun sendAudioNow(base64Audio: String) {
-        // Same realtimeInput format as the original working app.
         val inputPayload = JSONObject().apply {
             put("realtimeInput", JSONObject().apply {
-                put("audio", JSONObject().apply {
+                put("mediaChunks", JSONArray().put(JSONObject().apply {
                     put("mimeType", "audio/pcm;rate=16000")
                     put("data", base64Audio)
-                })
+                }))
             })
         }
         webSocket?.send(inputPayload.toString())
