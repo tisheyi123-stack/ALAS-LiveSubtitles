@@ -6,6 +6,7 @@
     <string name="status_connected">Live Subtitles Active</string>
     <string name="status_disconnected">Ready / Disconnected</string>
     <string name="target_dubbing_language">Target Subtitle Language</string>
+    <string name="source_language">Source Audio Language</string>
     <string name="select_language">Select Language</string>
     <string name="no_results_found">No results found</string>
     <string name="floating_widget">Floating Subtitle Box</string>

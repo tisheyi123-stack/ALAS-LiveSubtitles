@@ -6,6 +6,7 @@
     <string name="status_connected">زیرنویس زنده فعال است</string>
     <string name="status_disconnected">آماده به کار (قطع)</string>
     <string name="target_dubbing_language">زبان زیرنویس مقصد</string>
+    <string name="source_language">زبان صدای مبدأ</string>
     <string name="select_language">انتخاب زبان</string>
     <string name="no_results_found">نتیجه‌ای یافت نشد</string>
     <string name="floating_widget">جعبه شناور زیرنویس</string>

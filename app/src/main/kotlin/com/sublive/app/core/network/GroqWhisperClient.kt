@@ -30,11 +30,11 @@ class GroqWhisperClient(client: OkHttpClient? = null) {
         private const val MODEL = "whisper-large-v3-turbo"
     }
 
-    suspend fun transcribe(pcm16kMono: ByteArray, apiKey: String): String? =
+    suspend fun transcribe(pcm16kMono: ByteArray, apiKey: String, language: String? = null): String? =
         withContext(Dispatchers.IO) {
             try {
                 val wav = pcmToWav(pcm16kMono)
-                val body = MultipartBody.Builder()
+                val formBuilder = MultipartBody.Builder()
                     .setType(MultipartBody.FORM)
                     .addFormDataPart(
                         "file", "chunk.wav",
@@ -42,7 +42,12 @@ class GroqWhisperClient(client: OkHttpClient? = null) {
                     )
                     .addFormDataPart("model", MODEL)
                     .addFormDataPart("response_format", "json")
-                    .build()
+                // Skip language hint on "auto" so Whisper detects it itself.
+                val lang = language?.split("-")?.get(0)
+                if (!lang.isNullOrEmpty() && lang != "auto") {
+                    formBuilder.addFormDataPart("language", lang)
+                }
+                val body = formBuilder.build()
                 val req = Request.Builder()
                     .url(URL)
                     .header("Authorization", "Bearer $apiKey")

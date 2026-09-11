@@ -1,6 +1,7 @@
 package com.sublive.app.presentation.main
 
 val supportedLanguages = listOf(
+    "auto" to "🌐 Auto detect",
     "af" to "🇿🇦 Afrikaans", "sq" to "🇦🇱 Albanian", "am" to "🇪🇹 Amharic", "ar" to "🇸🇦 Arabic",
     "hy" to "🇦🇲 Armenian", "az" to "🇦🇿 Azerbaijani", "eu" to "🇪🇸 Basque", "be" to "🇧🇾 Belarusian",
     "bn" to "🇧🇩 Bengali", "bs" to "🇧🇦 Bosnian", "bg" to "🇧🇬 Bulgarian", "my" to "🇲🇲 Burmese",

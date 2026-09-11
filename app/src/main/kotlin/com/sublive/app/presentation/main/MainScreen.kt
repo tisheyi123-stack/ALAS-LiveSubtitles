@@ -241,6 +241,113 @@ fun MainScreen(
                     modifier = Modifier.padding(vertical = 8.dp)
                 )
 
+                // Source Language Selection Card
+                val sourceLang by viewModel.sourceLang.collectAsState()
+                var sourceExpanded by remember { mutableStateOf(false) }
+                var sourceQuery by remember { mutableStateOf("") }
+                val sourceDisplay = supportedLanguages.find { it.first == sourceLang }?.second ?: sourceLang
+
+                GlassCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(22.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(18.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(R.string.source_language),
+                                color = TextSecondary,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(NeonPurple.copy(alpha = 0.12f))
+                                    .padding(horizontal = 8.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = sourceLang.uppercase(),
+                                    color = NeonPurple,
+                                    fontSize = 11.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        ExposedDropdownMenuBox(
+                            expanded = sourceExpanded,
+                            onExpandedChange = { sourceExpanded = it }
+                        ) {
+                            OutlinedTextField(
+                                value = if (sourceExpanded) sourceQuery else sourceDisplay,
+                                onValueChange = { sourceQuery = it },
+                                readOnly = !sourceExpanded,
+                                label = { Text(stringResource(R.string.select_language), color = TextSecondary) },
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = sourceExpanded) },
+                                shape = RoundedCornerShape(16.dp),
+                                colors = OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = Color(0x30FFFFFF),
+                                    unfocusedContainerColor = Color(0x15FFFFFF),
+                                    focusedBorderColor = NeonPurple,
+                                    unfocusedBorderColor = Color.White.copy(alpha = 0.15f),
+                                    focusedTextColor = Color.White,
+                                    unfocusedTextColor = Color.White
+                                ),
+                                modifier = Modifier
+                                    .menuAnchor()
+                                    .fillMaxWidth()
+                            )
+
+                            ExposedDropdownMenu(
+                                expanded = sourceExpanded,
+                                onDismissRequest = {
+                                    sourceExpanded = false
+                                    sourceQuery = ""
+                                },
+                                modifier = Modifier
+                                    .background(Color(0xFF131D31))
+                                    .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(12.dp))
+                            ) {
+                                val sourceFiltered = supportedLanguages.filter {
+                                    it.second.contains(sourceQuery, ignoreCase = true)
+                                }
+                                sourceFiltered.forEach { (code, name) ->
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                name,
+                                                color = if (code == sourceLang) NeonPurple else Color.White,
+                                                fontWeight = if (code == sourceLang) FontWeight.Bold else FontWeight.Normal
+                                            )
+                                        },
+                                        onClick = {
+                                            viewModel.updateSourceLang(code)
+                                            sourceExpanded = false
+                                            sourceQuery = ""
+                                        }
+                                    )
+                                }
+                                if (sourceFiltered.isEmpty()) {
+                                    DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.no_results_found), color = TextSecondary) },
+                                        onClick = {}
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Language Selection Card
                 val targetLang by viewModel.targetLang.collectAsState()
                 var expanded by remember { mutableStateOf(false) }

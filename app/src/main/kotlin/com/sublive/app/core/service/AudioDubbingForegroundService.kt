@@ -176,7 +176,8 @@ class AudioDubbingForegroundService : Service() {
         if (!whisperInFlight.compareAndSet(false, true)) return
         serviceScope.launch {
             try {
-                val text = whisperClient?.transcribe(window, groqKey.trim())
+                val sourceLang = repository.sourceLangFlow.first()
+                val text = whisperClient?.transcribe(window, groqKey.trim(), sourceLang)
                 if (text.isNullOrBlank()) {
                     diagOnce("whisper", "Whisper: no response — check Groq key/net")
                     return@launch
