@@ -18,7 +18,7 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
         // Same translation model as the original working app.
         // Translation models only accept AUDIO modality, so we keep AUDIO
         // and read the live subtitle text from outputAudioTranscription.
-        private const val MODEL = "models/gemini-3.5-live-translate-preview"
+        private const val MODEL = "models/gemini-2.0-flash-exp"
     }
 
     private var isSetupComplete = false
@@ -43,18 +43,17 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
                     if (json.has("serverContent") || json.has("server_content")) {
                         val serverContent = json.optJSONObject("serverContent") ?: json.optJSONObject("server_content")
 
-                        // 1) Live subtitle text: transcript of the translated audio output.
-                        // The AUDIO modality keeps working (translation path unchanged),
-                        // we just display its transcript instead of playing the sound.
-                        val outputTranscription = serverContent?.optJSONObject("outputTranscription")
-                            ?: serverContent?.optJSONObject("output_transcription")
-                        val transcriptText = outputTranscription?.optString("text", "") ?: ""
-                        if (transcriptText.isNotEmpty()) {
-                            onTextMessageReceived?.invoke(transcriptText)
+                        val modelTurn = serverContent.optJSONObject("modelTurn") ?: serverContent.optJSONObject("model_turn")
+                        val parts = modelTurn?.optJSONArray("parts")
+                        if (parts != null) {
+                            for (i in 0 until parts.length()) {
+                                val part = parts.getJSONObject(i)
+                                val textChunk = part.optString("text", "")
+                                if (textChunk.isNotEmpty()) {
+                                    onTextMessageReceived?.invoke(textChunk)
+                                }
+                            }
                         }
-
-                        // 2) Translated AUDIO parts still arrive (inlineData) — ignored on purpose:
-                        // this is the subtitle app, original sound keeps playing untouched.
                     } else if (json.has("setupComplete") || json.has("setup_complete")) {
                         isSetupComplete = true
                         onStatusChanged?.invoke("Gemini Ready")
@@ -95,17 +94,12 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
             put("setup", JSONObject().apply {
                 put("model", MODEL)
                 put("generationConfig", JSONObject().apply {
-                    put("responseModalities", JSONArray().put("AUDIO"))
-                    put("translationConfig", JSONObject().apply {
-                        put("targetLanguageCode", targetLangCode)
-                        put("echoTargetLanguage", true)
-                    })
+                    put("responseModalities", JSONArray().put("TEXT"))
                 })
-                // Ask the server to also send a text transcript of its spoken
-                // translation — this transcript IS our live subtitle stream.
-                put("outputAudioTranscription", JSONObject())
-                put("sessionResumption", JSONObject().apply {
-                    put("handle", JSONObject.NULL)
+                put("systemInstruction", JSONObject().apply {
+                    put("parts", JSONArray().put(JSONObject().apply {
+                        put("text", "You are a real-time speech translation and subtitle generator. Listen to incoming audio streams from videos/podcasts and immediately output translated subtitles into target language: $targetLangCode. Output ONLY concise, accurate subtitle text fragments. Do not explain, greet, or wrap in quotes. You MUST translate simultaneously, streaming out chunks quickly instead of waiting for the end of the sentence.")
+                    }))
                 })
             })
         }
