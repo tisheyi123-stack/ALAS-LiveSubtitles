@@ -48,10 +48,8 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
                         // we just display its transcript instead of playing the sound.
                         val outputTranscription = serverContent?.optJSONObject("outputTranscription")
                             ?: serverContent?.optJSONObject("output_transcription")
-                            ?: serverContent?.optJSONObject("inputTranscription")
-                            ?: serverContent?.optJSONObject("input_transcription")
-                            ?: serverContent?.optJSONObject("interim_input_transcription")
-                            ?: serverContent?.optJSONObject("interimInputTranscription")
+                            ?: serverContent?.optJSONObject("interimOutputTranscription")
+                            ?: serverContent?.optJSONObject("interim_output_transcription")
                         val transcriptText = outputTranscription?.optString("text", "") ?: ""
                         if (transcriptText.isNotEmpty()) {
                             onTextMessageReceived?.invoke(transcriptText)
