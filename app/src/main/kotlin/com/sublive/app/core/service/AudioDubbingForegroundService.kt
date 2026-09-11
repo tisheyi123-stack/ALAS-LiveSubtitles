@@ -127,10 +127,10 @@ class AudioDubbingForegroundService : Service() {
                     text.trim()
                 }
 
-                // Auto clear after 10 seconds of silence/inactivity instead of 4s
+                // Auto clear after 7 seconds of silence/inactivity
                 clearTextJob?.cancel()
                 clearTextJob = serviceScope.launch {
-                    kotlinx.coroutines.delay(10000)
+                    kotlinx.coroutines.delay(7000)
                     partialSentence.clear()
                     liveSubtitleText.value = ""
                 }
