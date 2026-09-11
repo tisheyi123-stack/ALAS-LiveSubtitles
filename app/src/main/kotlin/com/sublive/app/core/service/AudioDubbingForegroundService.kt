@@ -63,6 +63,7 @@ class AudioDubbingForegroundService : Service() {
     private val partialSentence = StringBuilder()
     private val whisperInFlight = AtomicBoolean(false)
     private val windowBuffer = java.io.ByteArrayOutputStream(WINDOW_BYTES * 2)
+    private val diagShown = mutableSetOf<String>()
 
     override fun onCreate() {
         super.onCreate()
@@ -104,6 +105,7 @@ class AudioDubbingForegroundService : Service() {
         partialSentence.clear()
         windowBuffer.reset()
         whisperInFlight.set(false)
+        synchronized(diagShown) { diagShown.clear() }
         val projectionManager = getSystemService(Context.MEDIA_PROJECTION_SERVICE) as MediaProjectionManager
         mediaProjection = projectionManager.getMediaProjection(resultCode, data)
 
@@ -165,24 +167,38 @@ class AudioDubbingForegroundService : Service() {
         geminiKey: String,
         groqKey: String
     ) {
-        if (isSilent(window)) return
+        if (isSilent(window)) {
+            diagOnce("silence", "No audio detected — check volume")
+            return
+        }
         // Single-flight: drop the window if the previous one is still being
         // processed, so subtitles never pile up behind real time.
         if (!whisperInFlight.compareAndSet(false, true)) return
         serviceScope.launch {
             try {
-                val text = whisperClient?.transcribe(window, groqKey)
-                if (!text.isNullOrBlank()) {
-                    val target = repository.targetLangFlow.first()
-                        .split("-")[0].ifEmpty { "fa" }
-                    val translated = translator?.translate(text, target, geminiKey)
-                    if (!translated.isNullOrBlank()) {
-                        showSubtitle(translated.trim())
-                    }
+                val text = whisperClient?.transcribe(window, groqKey.trim())
+                if (text.isNullOrBlank()) {
+                    diagOnce("whisper", "Whisper: no response — check Groq key/net")
+                    return@launch
                 }
+                val target = repository.targetLangFlow.first()
+                    .split("-")[0].ifEmpty { "fa" }
+                val translated = translator?.translate(text, target, geminiKey.trim())
+                if (translated.isNullOrBlank()) {
+                    diagOnce("translate", "Translate: no response — check Gemini key")
+                    return@launch
+                }
+                showSubtitle(translated.trim())
             } finally {
                 whisperInFlight.set(false)
             }
+        }
+    }
+
+    /** Shows a diagnostic toast only once per session. */
+    private fun diagOnce(tag: String, msg: String) {
+        synchronized(diagShown) {
+            if (diagShown.add(tag)) toast(msg)
         }
     }
 
