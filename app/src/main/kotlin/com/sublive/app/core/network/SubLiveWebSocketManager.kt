@@ -18,7 +18,7 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
         // Same translation model as the original working app.
         // Translation models only accept AUDIO modality, so we keep AUDIO
         // and read the live subtitle text from outputAudioTranscription.
-        private const val MODEL = "models/gemini-2.0-flash-exp"
+        private const val MODEL = "models/gemini-2.0-flash-live-001"
     }
 
     private var isSetupComplete = false
