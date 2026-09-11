@@ -104,6 +104,7 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
                 // Ask the server to also send a text transcript of its spoken
                 // translation — this transcript IS our live subtitle stream.
                 put("outputAudioTranscription", JSONObject())
+                put("inputAudioTranscription", JSONObject())
                 put("sessionResumption", JSONObject().apply {
                     put("handle", JSONObject.NULL)
                 })
