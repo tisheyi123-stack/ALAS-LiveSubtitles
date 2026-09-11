@@ -108,29 +108,16 @@ class AudioDubbingForegroundService : Service() {
             }
             
             webSocketManager?.onTextMessageReceived = { chunk ->
-                // Keep the sentence accumulating until a punctuation mark clears it.
-                partialSentence.append(chunk)
-                var text = partialSentence.toString()
-                
-                val lastBoundary = text.indexOfLast { it == '.' || it == '!' || it == '?' || it == '؟' }
-                if (lastBoundary >= 0 && lastBoundary < text.length - 1) {
-                    text = text.substring(lastBoundary + 1).trimStart()
-                    partialSentence.clear()
-                    partialSentence.append(text)
+                // Simplest single-line mode: every new chunk replaces the old one.
+                // The stream from Gemini arrives phrase-by-phrase, so just show
+                // the latest phrase — nothing accumulates, nothing piles up.
+                val line = chunk.trim()
+                if (line.isNotEmpty()) {
+                    liveSubtitleText.value = line
                 }
-                
-                // Show last 14-15 words so it doesn't chop words in half
-                val words = text.trim().split(Regex("\\s+"))
-                liveSubtitleText.value = if (words.size > 14) {
-                    words.takeLast(14).joinToString(" ")
-                } else {
-                    text.trim()
-                }
-
-                // Auto clear after 7 seconds of silence/inactivity
                 clearTextJob?.cancel()
                 clearTextJob = serviceScope.launch {
-                    kotlinx.coroutines.delay(7000)
+                    kotlinx.coroutines.delay(4000)
                     partialSentence.clear()
                     liveSubtitleText.value = ""
                 }
