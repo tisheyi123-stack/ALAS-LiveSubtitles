@@ -11,7 +11,6 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
     private var webSocket: WebSocket? = null
     var onTextMessageReceived: ((String) -> Unit)? = null
     var onStatusChanged: ((String) -> Unit)? = null
-    var onTurnComplete: (() -> Unit)? = null
 
     companion object {
         private const val TAG = "SubLiveWebSocketManager"
@@ -22,7 +21,6 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
         private const val MODEL = "models/gemini-3.5-live-translate-preview"
     }
 
-    @Volatile
     private var isSetupComplete = false
 
     fun connect(apiKey: String, sourceLang: String, targetLang: String) {
@@ -38,6 +36,7 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
             }
 
             override fun onMessage(webSocket: WebSocket, text: String) {
+                Log.d(TAG, "Raw message: $text")
                 try {
                     val json = JSONObject(text)
 
@@ -54,36 +53,13 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
                             onTextMessageReceived?.invoke(transcriptText)
                         }
 
-                        // 1b) modelTurn text parts, if the server sends any alongside audio.
-                        val modelTurn = serverContent?.optJSONObject("modelTurn")
-                            ?: serverContent?.optJSONObject("model_turn")
-                        modelTurn?.optJSONArray("parts")?.let { parts ->
-                            for (i in 0 until parts.length()) {
-                                val textChunk = parts.optJSONObject(i)?.optString("text", "") ?: ""
-                                if (textChunk.isNotEmpty()) {
-                                    onTextMessageReceived?.invoke(textChunk)
-                                }
-                            }
-                        }
-
-                        // 1c) Turn closed by the server -> let the service reset its guards.
-                        if (serverContent?.optBoolean("turnComplete", false) == true ||
-                            serverContent?.optBoolean("turn_complete", false) == true
-                        ) {
-                            onTurnComplete?.invoke()
-                        }
-
                         // 2) Translated AUDIO parts still arrive (inlineData) — ignored on purpose:
                         // this is the subtitle app, original sound keeps playing untouched.
                     } else if (json.has("setupComplete") || json.has("setup_complete")) {
                         isSetupComplete = true
                         onStatusChanged?.invoke("Gemini Ready")
-                        synchronized(pendingAudio) {
-                            pendingAudio.forEach { sendAudioNow(it) }
-                            pendingAudio.clear()
-                        }
-                    } else if (json.has("goAway") || json.has("go_away")) {
-                        onStatusChanged?.invoke("Reconnecting…")
+                        pendingAudio.forEach { sendAudioNow(it) }
+                        pendingAudio.clear()
                     } else if (json.has("error")) {
                         val errMessage = json.getJSONObject("error").optString("message", "Unknown error")
                         Log.e(TAG, "API Error: $errMessage")
@@ -114,7 +90,7 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
     }
 
     private fun sendGeminiSetup(targetLang: String) {
-        val targetLangCode = targetLang.split("-")[0].ifEmpty { "fa" }
+        val targetLangCode = targetLang.split("-")[0]
         val setupPayload = JSONObject().apply {
             put("setup", JSONObject().apply {
                 put("model", MODEL)
@@ -124,20 +100,6 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
                         put("targetLanguageCode", targetLangCode)
                         put("echoTargetLanguage", true)
                     })
-                })
-                // Fast end-of-speech detection: the server starts translating
-                // ~200ms after a pause instead of hanging on an open turn.
-                // Translation/audio path is untouched — this only closes turns faster.
-                put("realtimeInputConfig", JSONObject().apply {
-                    put("automaticActivityDetection", JSONObject().apply {
-                        put("disabled", false)
-                        put("startOfSpeechSensitivity", "START_SENSITIVITY_HIGH")
-                        put("endOfSpeechSensitivity", "END_SENSITIVITY_HIGH")
-                        put("prefixPaddingMs", 20)
-                        put("silenceDurationMs", 200)
-                    })
-                    put("activityHandling", "START_OF_ACTIVITY_INTERRUPTS")
-                    put("turnCoverage", "TURN_INCLUDES_ALL_INPUT")
                 })
                 // Ask the server to also send a text transcript of its spoken
                 // translation — this transcript IS our live subtitle stream.
@@ -155,11 +117,8 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
     fun sendAudioData(pcmData: ByteArray) {
         val base64Audio = Base64.encodeToString(pcmData, Base64.NO_WRAP)
         if (!isSetupComplete) {
-            synchronized(pendingAudio) {
-                // ~4s of 200ms batches max; drop oldest so we never translate stale audio
-                pendingAudio.add(base64Audio)
-                if (pendingAudio.size > 20) pendingAudio.removeAt(0)
-            }
+            pendingAudio.add(base64Audio)
+            if (pendingAudio.size > 8) pendingAudio.removeAt(0)
             return
         }
         sendAudioNow(base64Audio)
@@ -178,26 +137,8 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
         webSocket?.send(inputPayload.toString())
     }
 
-    /**
-     * Force-close the current turn so the server answers NOW.
-     * Called on ~600ms silence or by the max-turn guard, so translation
-     * never stalls behind the audio.
-     */
-    fun commitTurn() {
-        if (!isSetupComplete) return
-        val payload = JSONObject().apply {
-            put("clientContent", JSONObject().apply {
-                put("turnComplete", true)
-            })
-        }
-        try {
-            webSocket?.send(payload.toString())
-        } catch (_: Exception) {
-        }
-    }
-
     fun disconnect() {
-        synchronized(pendingAudio) { pendingAudio.clear() }
+        pendingAudio.clear()
         webSocket?.close(1000, "User requested stop")
         webSocket = null
         onStatusChanged?.invoke("Disconnected")
