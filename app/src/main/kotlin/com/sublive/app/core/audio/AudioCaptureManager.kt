@@ -84,7 +84,7 @@ class AudioCaptureManager {
                             Log.d(TAG, "Captured 250 reads")
                         }
                         batch.write(readBuf, 0, read)
-                        while (batch.size() >= BATCH_BYTES) {
+                        while (batch.size >= BATCH_BYTES) {
                             val full = batch.toByteArray()
                             val chunk = full.copyOf(BATCH_BYTES)
                             val rest = full.copyOfRange(BATCH_BYTES, full.size())
