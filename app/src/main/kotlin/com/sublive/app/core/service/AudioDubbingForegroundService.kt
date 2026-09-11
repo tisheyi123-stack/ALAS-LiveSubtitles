@@ -97,6 +97,7 @@ class AudioDubbingForegroundService : Service() {
             val repository = UserPreferencesRepository(applicationContext)
             
             val apiKey = repository.apiKeyFlow.first()
+            val sourceLang = repository.sourceLangFlow.first()
             val targetLang = repository.targetLangFlow.first()
             
             webSocketManager = SubLiveWebSocketManager(OkHttpClient())
@@ -123,7 +124,7 @@ class AudioDubbingForegroundService : Service() {
                 }
             }
             
-            webSocketManager?.connect(apiKey, "", targetLang)
+            webSocketManager?.connect(apiKey, sourceLang, targetLang)
             
             langObservationJob?.cancel()
             langObservationJob = serviceScope.launch {
