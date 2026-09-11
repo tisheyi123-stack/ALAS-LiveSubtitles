@@ -96,6 +96,11 @@ class SubLiveWebSocketManager(private val client: OkHttpClient) {
         val setupPayload = JSONObject().apply {
             put("setup", JSONObject().apply {
                 put("model", MODEL)
+                put("systemInstruction", JSONObject().apply {
+                    put("parts", JSONArray().put(JSONObject().apply {
+                        put("text", "Translate continuously in real-time, word by word as the speaker talks. Do not wait for complete sentences or pauses. Prioritize extremely low latency over perfect grammar.")
+                    }))
+                })
                 put("generationConfig", JSONObject().apply {
                     put("responseModalities", JSONArray().put("AUDIO"))
                     put("translationConfig", JSONObject().apply {
